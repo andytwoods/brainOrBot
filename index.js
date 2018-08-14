@@ -69,10 +69,8 @@
             'preClick': gather_movements_between(click_time - api.preClickTime, click_time)
         };
 
-        setTimeout(function(){
+        setTimeout(function () {
             data['postClick'] = gather_movements_between(click_time, click_time + api.postClickTime);
-            console.log(data,22);
-
         }, api.postClickTime)
     }
 
