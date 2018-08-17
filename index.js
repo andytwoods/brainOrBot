@@ -37,7 +37,6 @@
             pageX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
             pageY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
         }
-
         click_times_x_positions.push({x: pageX, y: pageY, time: now() - start_timestamp});
     }
 
@@ -59,18 +58,27 @@
         return time_range;
     }
 
-    document.addEventListener("click", mouseClickListener);
-    function mouseClickListener(e){
+    var mouseData;
+    document.addEventListener("mousedown", mouseDownListener);
+    document.addEventListener("mouseup", mouseUpListener);
+    function mouseDownListener(e){
         var click_timestamp = now();
-        var click_time = click_timestamp - start_timestamp;
+        var down_time = click_timestamp - start_timestamp;
 
-        var data = {
-            'click_time': click_time,
-            'preClick': gather_movements_between(click_time - api.preClickTime, click_time)
+        mouseData = {
+            'mouse_down_time': down_time,
+            'preClick': gather_movements_between(down_time - api.preClickTime, down_time)
         };
+    }
+    function mouseUpListener(e){
+        var click_timestamp = now();
+        var up_time = click_timestamp - start_timestamp;
+
+        mouseData['up_time'] = up_time;
+        mouseData['mouse_pressed_dur'] = up_time - mouseData['mouse_down_time'];
 
         setTimeout(function () {
-            data['postClick'] = gather_movements_between(click_time, click_time + api.postClickTime);
+            mouseData['postClick'] = gather_movements_between(up_time, up_time + api.postClickTime);
         }, api.postClickTime)
     }
 

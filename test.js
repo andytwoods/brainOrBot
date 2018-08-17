@@ -32,13 +32,14 @@ try {
     console.log('Error:', e.stack);
 }
 
+console.log(12)
 function tests() {
 
     performance = {now: function(){return 123}};
-
+    console.log(123);
     test('My first test', function (assert) {
         assert.equal(now(), 123, 'Numbers 1 and 2 are the same');
         assert.end();
-    });
+    }   );
 
 }
