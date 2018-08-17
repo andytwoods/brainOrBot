@@ -20,8 +20,10 @@
     var start_timestamp = now() ;
 
     var click_times_x_positions = [];
+    var button_durations = [];
     //don't want to give user access to mutable data, hence deep clone of arrays of objects
     api.get_click_times_x_positions = function(){JSON.parse(JSON.stringify(click_times_x_positions))};
+    api.get_button_durations = function(){JSON.parse(JSON.stringify(button_durations))};
 
     // detect mouse movement and note mouse position with 'time from start'
     document.addEventListener("mousemove", mouseMoveListener);
@@ -58,27 +60,37 @@
         return time_range;
     }
 
-    var mouseData;
+    var mouseDownData;
     document.addEventListener("mousedown", mouseDownListener);
     document.addEventListener("mouseup", mouseUpListener);
     function mouseDownListener(e){
         var click_timestamp = now();
         var down_time = click_timestamp - start_timestamp;
 
-        mouseData = {
-            'mouse_down_time': down_time,
+        mouseDownData = {
+            'button': e.button,
+            'down_time': down_time,
             'preClick': gather_movements_between(down_time - api.preClickTime, down_time)
         };
     }
+
     function mouseUpListener(e){
+        if(!mouseDownData) return;
+        if(mouseDownData['button'] !== e.button) return;
         var click_timestamp = now();
         var up_time = click_timestamp - start_timestamp;
+        var mouse_pressed_dur = up_time - mouseDownData['down_time'];
+
+        // need localised clone in case lots of quick button presses (and overwriting of initial var)
+        var mouseData = JSON.parse(JSON.stringify(mouseDownData));
+        mouseDownData = undefined;
 
         mouseData['up_time'] = up_time;
-        mouseData['mouse_pressed_dur'] = up_time - mouseData['mouse_down_time'];
+        mouseData['pressed_dur'] = mouse_pressed_dur;
 
         setTimeout(function () {
             mouseData['postClick'] = gather_movements_between(up_time, up_time + api.postClickTime);
+            click_times_x_positions.push(mouseData)
         }, api.postClickTime)
     }
 
@@ -88,13 +100,50 @@
         return String.fromCharCode(charCode);
     }
 
+    var keyDownData = undefined;
     document.addEventListener("keydown", keydownListener);
     document.addEventListener("keyup", keyupListener);
     function keydownListener(e){
         var k = key(e);
+
+        //keyboard buttons can be held down. Each new letter printed emits this event.
+        if(keyDownData){
+            if(keyDownData['key']!==k){
+                keyDownData = undefined;
+            }
+            else{
+                keyDownData['count']++;
+                return
+            }
+        }
+
+        var key_timestamp = now();
+        var down_time = key_timestamp - start_timestamp;
+
+        keyDownData = {
+            'key': k,
+            'down_time': down_time,
+            'count': 1
+        };
+
+
     }
     function keyupListener(e){
         var k = key(e);
+        if(!keyDownData) return;
+        if(keyDownData['key'] !== k) return;
+        var click_timestamp = now();
+        var up_time = click_timestamp - start_timestamp;
+        var key_pressed_dur = up_time - keyDownData['down_time'];
+
+        // need localised clone in case lots of quick button presses (and overwriting of initial var)
+        var buttonData = JSON.parse(JSON.stringify(keyDownData));
+        keyDownData = undefined;
+
+        buttonData['up_time'] = up_time;
+        buttonData['pressed_dur'] = key_pressed_dur;
+
+        button_durations.push(buttonData);
     }
 
 
