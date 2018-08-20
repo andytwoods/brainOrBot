@@ -1,6 +1,6 @@
 //doing this in ES5 to encourage fresh developers to contribute (so they avoid the headache of ES6 / JS Fatigue)
 
-// let's run the function immediately, keeping it's contents entirely isolated from runtime
+// let's instantiate the package immediately
 (function () {
 
     //lets create an API to quiz brainOrBot
@@ -23,10 +23,19 @@
         }
     })();
 
-    var start_timestamp = now();
+    var start_timestamp;
+    var click_durations_x_positions;
+    var button_durations;
 
-    var click_durations_x_positions = [];
-    var button_durations = [];
+    api.reset = function(){
+        start_timestamp = now();
+        click_durations_x_positions = [];
+        button_durations = [];
+    };
+
+    api.reset();
+
+
     //don't want to give user access to mutable data, hence deep clone of arrays of objects
     api.get_click_times_x_positions = function () {
         JSON.parse(JSON.stringify(click_durations_x_positions))
@@ -36,12 +45,12 @@
     };
 
     //get the distribution of clicks from x to y ms in chunks of z milliseconds
-    api.get_click_dist = function(from, to, ms_chunks){
+    api.get_click_dist = function(ms_chunks, from, to){
        var filtered = filter_durations('click', from, to);
        return down_time(filtered, ms_chunks);
     };
 
-    api.get_button_dist = function(from, to, ms_chunks){
+    api.get_button_dist = function(ms_chunks, from, to){
         var filtered = filter_durations('button', from, to);
         return down_time(filtered, ms_chunks)
     };
@@ -56,7 +65,7 @@
         var duration;
         var down_time;
 
-        for(i=0;i<items.length;i++){
+        for(var i=0;i<items.length;i++){
             item = items[i];
             duration = item['duration'];
             down_time = item['down_time']
